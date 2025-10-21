@@ -1,6 +1,7 @@
 # src/screens/home.py
 
-from textual.app import App
+from textual.app import App, ComposeResult
+from textual.containers import Container, Horizontal
 from textual.screen import Screen
 from textual.widgets import Header, Footer, Static, Button
 
@@ -51,14 +52,21 @@ class HomeScreen(Screen):
     """The main application view/page."""
     
     # Textual calls this method to define the structure of the screen
-    def compose(self):
+    def compose(self) -> ComposeResult:
         yield Header()
-        yield TickerWidget(id="ticker")
         yield Footer()
-        yield Static("Welcome to the Home Screen! 👋", classes="title")
-        yield Button("Go to Settings", id="to_settings")
+        yield Container(
+            Static("Welcome to the Home Screen! 👋", classes="primary"),
+            classes="horizontal",
+        )
+        yield Container(
+            Static("Real-Time Data:", classes="secondary"),
+            TickerWidget(classes="ticker_widget"),
+            classes="vertical",
+        )
+        yield Static("logged in as: user123", classes="secondary")
+    
 
-    # Define a method to handle button presses (Textual's message system)
     def on_button_pressed(self, event: Button.Pressed):
         if event.button.id == "to_settings":
             # 1. The key navigation command: push the next screen

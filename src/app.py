@@ -9,8 +9,46 @@ from workers.markets import fetch_market, fetch_markets, ApiDataFetched
 
 from screens.home import HomeScreen
 from screens.settings import SettingsScreen
+from screens.token import TokenScreen
 
 class RealTimeTUIApp(App):
+    CSS = """
+    Header {
+        dock: top;
+        text-style: bold;
+        height: 1;
+        content-align: center middle;
+        background: $panel;
+        color: $text;
+        padding-bottom: 1;
+    }
+    Footer {
+        dock: bottom;
+        height: 1;
+        content-align: center middle;
+        background: $panel;
+        color: $text;
+    }
+    .primary{
+        text-style: bold;
+        content-align: center middle;
+    }
+    .secondary {
+        text-style: dim;
+    }
+    .horizontal {
+        layout: horizontal;
+        height: auto;
+        padding: 1;
+        background: $panel;
+    }
+    .vertical {
+        layout: vertical;
+        width: auto;
+        padding: 1;
+    }
+    """
+    
     market_data = reactive({})  # Global reactive state for market data
     
     exchange_client: ccxt.Exchange | None = None
@@ -19,11 +57,13 @@ class RealTimeTUIApp(App):
     SCREENS = {
         "home": HomeScreen,
         "settings": SettingsScreen,
+        "token": TokenScreen,
     }
     
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("s", "push_screen('settings')", "Settings"), # Direct key navigation
+        ("q", "quit", "quit"),
+        ("s", "push_screen('settings')", "settings"), # Direct key navigation
+        ("t", "push_screen('token')", "token info"), # Direct key navigation
     ]
     
     def on_mount(self):
@@ -53,7 +93,7 @@ class RealTimeTUIApp(App):
             
             self.market_data = message.data 
             
-            self.log("Global market_data state updated!")
+            self.log("Global market_data state updated!", self.market_data)
 
             message.stop()
 
@@ -61,8 +101,6 @@ class RealTimeTUIApp(App):
         """A simple method to handle key bindings that switch screens."""
         self.push_screen(screen_name)
     
-    # Note: Textual is asynchronous, so 'async' is often used here
-    # but is omitted for simplicity of this example.
 
 if __name__ == "__main__":
     app = RealTimeTUIApp()
