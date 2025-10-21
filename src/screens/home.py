@@ -6,7 +6,26 @@ from textual.screen import Screen
 from textual.widgets import Header, Footer, Static, Button
 
 class TickerWidget(Static):
-   def watch_market_data(self, data: dict) -> None:
+    current_data: dict = {}
+    def on_mount(self) -> None:
+        """
+        Sets the widget's initial content by reading the current state 
+        of the App's reactive variable.
+        """
+        # Get the current value of the app's market_data property
+        current_data = self.app.market_data 
+        self.log("current_data on mount:", current_data)
+        
+        # Manually trigger the update logic with the current data
+        # This will set it to "[i]Waiting for market data...[/i]" initially
+        self.watch_market_data(current_data)
+        
+        # Important: set a default content, in case watch_market_data fails
+        if not self.app.market_data:
+            self.update("[i]Application starting up...[/i]")
+            return
+   
+    def watch_market_data(self, data: dict) -> None:
         """
         Called when the TUI's primary market_data state changes.
         """
@@ -32,22 +51,6 @@ class TickerWidget(Static):
             f"[bold blue]{symbol}[/bold blue]: {price_str}"
         )
         
-        def on_mount(self) -> None:
-            """
-            Sets the widget's initial content by reading the current state 
-            of the App's reactive variable.
-            """
-            # Get the current value of the app's market_data property
-            current_data = self.app.market_data 
-            
-            # Manually trigger the update logic with the current data
-            # This will set it to "[i]Waiting for market data...[/i]" initially
-            self.watch_market_data(current_data)
-            
-            # Important: set a default content, in case watch_market_data fails
-            if not self.app.market_data:
-                self.update("[i]Application starting up...[/i]")
-
 class HomeScreen(Screen):
     """The main application view/page."""
     

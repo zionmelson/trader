@@ -1,3 +1,5 @@
+# src/app.py
+
 import ccxt.async_support as ccxt
 
 from datetime import datetime
@@ -93,7 +95,7 @@ class RealTimeTUIApp(App):
             
             self.market_data = message.data 
             
-            self.log("Global market_data state updated!", self.market_data)
+            self.log("Global market_data state updated!")
 
             message.stop()
 
