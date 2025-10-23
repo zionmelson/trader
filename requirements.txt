@@ -11,3 +11,4 @@ requests~=2.32.3
 textual==6.3.0
 ccxt==4.5.11
 asyncio==4.0.0
+ta-lib==0.6.8
