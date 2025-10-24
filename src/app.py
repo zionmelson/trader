@@ -8,6 +8,8 @@ from textual.app import App, ComposeResult
 from textual.reactive import reactive
 from textual.widgets import Header, Footer, Static, Button, Digits
 
+from clients.manager import PriceManager
+
 from workers.markets import fetch_ohlcv, fetch_market, fetch_markets, ApiDataFetched
 
 from screens.home import HomeScreen
@@ -38,22 +40,23 @@ class RealTimeTUIApp(App):
     }
     .secondary {
         text-style: dim;
+        content-align: center middle;
     }
     .horizontal {
         layout: horizontal;
         height: auto;
         padding: 1;
-        background: $panel;
     }
     .vertical {
         layout: vertical;
         height: auto;
         padding: 1;
-        background: $panel;
     }
     """
     
-    market_data = reactive(b"")  # Global reactive state for market data
+    price_manager: PriceManager | None = None
+    
+    strategy_data = reactive(b"")  # Global reactive state for market data
     
     exchange_client: ccxt.Exchange | None = None
     symbols: list[str] = []
@@ -76,7 +79,7 @@ class RealTimeTUIApp(App):
             self.exchange_client = ccxt.binanceus({
                 'enableRateLimit': True,
             })
-            self.symbols = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'DOGE/USDT']
+            self.symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'DOGE/USD']
 
             self.log("Exchange client initialized.")
         except Exception as e:
@@ -95,7 +98,7 @@ class RealTimeTUIApp(App):
     def on_api_data_fetched(self, message: ApiDataFetched):
             """Called when ApiDataFetched message is received from the worker."""
             
-            self.market_data = message.data 
+            self.strategy_data = message.data 
 
             message.stop()
 

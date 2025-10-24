@@ -61,14 +61,10 @@ class TickerWidget(Static):
             return
 
         try:
-            # .iloc[-1] gets the last row
             last_row = df_5m.iloc[-1]
             
             self.log(f"TickerWidget: last_row data: {last_row.to_dict()}")
             
-            # Your fetch_ohlcv is hard-coded to 'ETH/USD', 
-            # but your app.symbols[0] is 'BTC/USDT'. 
-            # Let's just use what's in the app for consistency.
             symbol = self.app.symbols[0] 
             price = last_row.get("close", "N/A") # Get the 'close' price from the last row
 
@@ -79,11 +75,11 @@ class TickerWidget(Static):
                 price_str = f"[bold red]{price}[/bold red]"
 
             self.update(
-                f"[bold blue]{symbol}[/bold blue]: {price_str}"
+                f"[bold white]{symbol}[/bold white]: {price_str}"
             )
         except Exception as e:
             self.log(f"Error processing DataFrame: {e}")
-            self.update(f"[red]Error parsing data[/red]")
+            self.update(f"[red]Error parsing data[/red]:", e)
         
 class HomeScreen(Screen):
     """The main application view/page."""
@@ -93,11 +89,11 @@ class HomeScreen(Screen):
         yield Header()
         yield Footer()
         yield Container(
-            Static("🫩", classes="primary"),
+            Static("💹", classes="primary"),
             classes="horizontal"
         )
         yield Container(
-            TickerWidget(classes="ticker_widget"),
+            TickerWidget(classes="secondary"),
             classes="vertical"
         )
     

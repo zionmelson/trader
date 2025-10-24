@@ -20,6 +20,9 @@ class ApiDataFetched(Message):
         self.data = data
         super().__init__()
 
+class Prices(App):
+    """struct to normalize prices."""
+
 async def fetch_ohlcv(app: App):
     """
     Fetches OHLCV data using the CCXT client attached to the main App.
@@ -32,9 +35,9 @@ async def fetch_ohlcv(app: App):
     try:
         ohlcv = await app.exchange_client.fetch_ohlcv(app.symbols[0], '1d', limit=30)
         timeframes = {
-            "5m": await app.exchange_client.fetch_ohlcv('ETH/USD', '5m', limit=(NORMAL_DURATION * 12)),
-            "1h": await app.exchange_client.fetch_ohlcv('ETH/USD', '1h',  limit=(NORMAL_DURATION * 4)),
-            "1d": await app.exchange_client.fetch_ohlcv('ETH/USD', '1d',  limit=(LONG_DURATION * 1)),
+            "5m": await app.exchange_client.fetch_ohlcv(app.symbols[0], '5m', limit=(NORMAL_DURATION * 12)),
+            "1h": await app.exchange_client.fetch_ohlcv(app.symbols[0], '1h',  limit=(NORMAL_DURATION * 4)),
+            "1d": await app.exchange_client.fetch_ohlcv(app.symbols[0], '1d',  limit=(LONG_DURATION * 1)),
      }
         
         dfs = {}
