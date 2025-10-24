@@ -1,0 +1,1 @@
+# src/widgets/status_bar.py

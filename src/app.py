@@ -7,7 +7,7 @@ from textual.app import App, ComposeResult
 from textual.reactive import reactive
 from textual.widgets import Header, Footer, Static, Button, Digits
 
-from workers.markets import fetch_market, fetch_markets, ApiDataFetched
+from workers.markets import fetch_ohlcv, fetch_market, fetch_markets, ApiDataFetched
 
 from screens.home import HomeScreen
 from screens.settings import SettingsScreen
@@ -71,11 +71,11 @@ class RealTimeTUIApp(App):
     def on_mount(self):
         # Initialize exchange client
         try:
-            self.exchange_client = ccxt.hyperliquid({
+            self.exchange_client = ccxt.binanceus({
                 'enableRateLimit': True,
             })
-            self.symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'DOGE/USD']
-            
+            self.symbols = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'DOGE/USDT']
+
             self.log("Exchange client initialized.")
         except Exception as e:
             self.log(f"Error initializing exchange client: {e}")
@@ -88,14 +88,14 @@ class RealTimeTUIApp(App):
                 
     def start_data_fetch(self):
         """A placeholder method to start data fetching tasks."""
-        self.run_worker(fetch_markets(self), exclusive=True)
+        self.run_worker(fetch_ohlcv(self), exclusive=True)
 
     def on_api_data_fetched(self, message: ApiDataFetched):
             """Called when ApiDataFetched message is received from the worker."""
             
             self.market_data = message.data 
             
-            self.log("Global market_data state updated!")
+            self.log("Global market_data state updated!", self.market_data)
 
             message.stop()
 

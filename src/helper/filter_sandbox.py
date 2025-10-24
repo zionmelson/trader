@@ -1,3 +1,5 @@
+# src/helper/filter_sandbox.py
+
 import ccxt.async_support as ccxt
 
 async def filter_sandbox_exchanges():

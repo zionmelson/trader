@@ -4,3 +4,30 @@ MACD
 ADX
 EMA
 Bollinger Bands
+
+
+
+-- CHAT PROMPT --
+problem ⬇️
+im building a TUI trading bot app using two different packages, textual and ccxt, its a python project, structured as such:
+
+---------------------------
+
+helper/helpers.py
+
+screens/screens.py
+
+widgets/widgets.py (textual widgets)
+
+workers/apis.py
+
+app.py
+
+main.py
+
+__init__.py
+
+---------------------------
+
+solution you want ⬇️
+the issue that im running into is that i want to use textuals built in reactive object on the data called from my workers, but I want to send this data as a pandas DF for easy manipulation, how should i go about sending this data that allows for best performance and design practice?
