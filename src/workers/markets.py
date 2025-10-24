@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import talib
+import pickle
 
 import ccxt.async_support as ccxt
 from textual.app import App
@@ -104,8 +105,9 @@ async def fetch_ohlcv(app: App):
             )
             
             dfs[tf] = df
-        
-        app.post_message(ApiDataFetched(dfs))
+    
+        pickled_dfs = pickle.dumps(dfs)
+        app.post_message(ApiDataFetched(pickled_dfs))
     except Exception as e:
         app.post_message(ApiDataFetched(str(e)))
     finally:

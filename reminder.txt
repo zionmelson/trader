@@ -8,26 +8,36 @@ Bollinger Bands
 
 
 -- CHAT PROMPT --
-problem ⬇️
-im building a TUI trading bot app using two different packages, textual and ccxt, its a python project, structured as such:
-
----------------------------
-
-helper/helpers.py
-
-screens/screens.py
-
-widgets/widgets.py (textual widgets)
-
-workers/apis.py
-
-app.py
-
-main.py
-
+- context: im building a TUI trading bot app using python & various packages
+- project structure:
+helper/filter_leverage.py
+helper/filter_sandbox.py
+helper/save_file.py
+screens/home.py
+screens/settings.py
+screens/token.py
+widgets/status_bar.py (textual widgets)
+workers/markets.py
 __init__.py
+app.py
+main.py
+- packages: 
+websockets==11.0.3
+websocket-client==1.9.0
+python-dotenv==1.0.0
+pandas==2.3.3
+numpy==2.3.4
+python-dateutil==2.8.2
+eth-account~=0.13.7
+eth-abi~=5.2.0
+web3~=7.11.0
+requests~=2.32.3
+textual==6.3.0
+ccxt==4.5.11
+asyncio==4.0.0
+ta-lib==0.6.8
 
----------------------------
+i dont need you to do anything yet, im just giving you context on what I need your help with, please allow for me to send all of the following pages of this project, i will do this in the following messages I send, please just wait to respond after all of the files have been sent.
 
-solution you want ⬇️
+- your job: 
 the issue that im running into is that i want to use textuals built in reactive object on the data called from my workers, but I want to send this data as a pandas DF for easy manipulation, how should i go about sending this data that allows for best performance and design practice?

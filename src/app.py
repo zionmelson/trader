@@ -1,5 +1,6 @@
 # src/app.py
 
+import pickle
 import ccxt.async_support as ccxt
 
 from datetime import datetime
@@ -46,12 +47,13 @@ class RealTimeTUIApp(App):
     }
     .vertical {
         layout: vertical;
-        width: auto;
+        height: auto;
         padding: 1;
+        background: $panel;
     }
     """
     
-    market_data = reactive({})  # Global reactive state for market data
+    market_data = reactive(b"")  # Global reactive state for market data
     
     exchange_client: ccxt.Exchange | None = None
     symbols: list[str] = []
@@ -94,15 +96,8 @@ class RealTimeTUIApp(App):
             """Called when ApiDataFetched message is received from the worker."""
             
             self.market_data = message.data 
-            
-            self.log("Global market_data state updated!", self.market_data)
 
             message.stop()
-
-    def action_push_screen(self, screen_name: str) -> None:
-        """A simple method to handle key bindings that switch screens."""
-        self.push_screen(screen_name)
-    
 
 if __name__ == "__main__":
     app = RealTimeTUIApp()

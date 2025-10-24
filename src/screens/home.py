@@ -1,5 +1,7 @@
 # src/screens/home.py
 
+import pickle
+import time
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal
 from textual.screen import Screen
@@ -11,45 +13,77 @@ class TickerWidget(Static):
         """
         Sets the widget's initial content by reading the current state 
         of the App's reactive variable.
-        """
-        # Get the current value of the app's market_data property
-        current_data = self.app.market_data 
-        self.log("current_data on mount:", current_data)
+        """  
         
-        # Manually trigger the update logic with the current data
-        # This will set it to "[i]Waiting for market data...[/i]" initially
-        self.watch_market_data(current_data)
+        self.watch(self.app, "market_data", self.watch_market_data)
         
-        # Important: set a default content, in case watch_market_data fails
         if not self.app.market_data:
             self.update("[i]Application starting up...[/i]")
             return
-   
-    def watch_market_data(self, data: dict) -> None:
+
+        
+    def watch_market_data(self, data: bytes) -> None:
         """
         Called when the TUI's primary market_data state changes.
         """
-        self.log(f"TickerWidget: received update with data keys: {list(data.keys())}")
+        self.log('unpicing data')
         
-        # 1. Handle the initial empty state (or if the API call fails)
-        if not data:
-            self.update("[i]Waiting for market data...[/i]")
+        try:
+            unpickled_data = pickle.loads(data)
+            
+            if isinstance(unpickled_data, str):
+                self.log(f"Received error from worker: {unpickled_data}")
+                self.update(f"[red]API Error: {unpickled_data}[/red]")
+                return
+            
+            current_data = unpickled_data
+            self.log(f"TickerWidget: received update with data keys: {list(current_data.keys())}")
+            
+            self.log('unpicing data')
+            
+            if data == {}:
+                self.update("[i]Waiting for market data...[/i]")
+                return
+        
+        except Exception as e:
+            self.log(f"Error unpickling data: {e}")
+            self.update("[red]Error: Corrupt data[/red]")
+            return
+            
+        # 3. Handle if the unpickled data is an error string
+        
+        df_5m = unpickled_data.get("5m")
+        df_1h = unpickled_data.get("1h")
+        df_1d = unpickled_data.get("1d")
+
+        if df_5m is None or df_1h is None or df_1d is None:
+            self.update("[i]Incomplete market data received...[/i]")
             return
 
-        # 2. Safely extract and format the data
-        # Ensure your keys match the format returned by CCXT (e.g., 'symbol' and 'last' for fetch_ticker)
-        symbol = data.get("symbol", "N/A")
-        price = data.get("price", data.get("last", "N/A")) # Check for 'price' or 'last'
-        
-        # Format the display string
-        if price != "N/A" and isinstance(price, (int, float)):
-             price_str = f"[bold green]${price:.2f}[/bold green]"
-        else:
-            price_str = f"[bold red]{price}[/bold red]"
+        try:
+            # .iloc[-1] gets the last row
+            last_row = df_5m.iloc[-1]
             
-        self.update(
-            f"[bold blue]{symbol}[/bold blue]: {price_str}"
-        )
+            self.log(f"TickerWidget: last_row data: {last_row.to_dict()}")
+            
+            # Your fetch_ohlcv is hard-coded to 'ETH/USD', 
+            # but your app.symbols[0] is 'BTC/USDT'. 
+            # Let's just use what's in the app for consistency.
+            symbol = self.app.symbols[0] 
+            price = last_row.get("close", "N/A") # Get the 'close' price from the last row
+
+            # Format the display string
+            if price != "N/A" and isinstance(price, (int, float)):
+                 price_str = f"[bold green]${price:.2f}[/bold green]"
+            else:
+                price_str = f"[bold red]{price}[/bold red]"
+
+            self.update(
+                f"[bold blue]{symbol}[/bold blue]: {price_str}"
+            )
+        except Exception as e:
+            self.log(f"Error processing DataFrame: {e}")
+            self.update(f"[red]Error parsing data[/red]")
         
 class HomeScreen(Screen):
     """The main application view/page."""
@@ -59,15 +93,13 @@ class HomeScreen(Screen):
         yield Header()
         yield Footer()
         yield Container(
-            Static("Welcome to the Home Screen! 👋", classes="primary"),
-            classes="horizontal",
+            Static("🫩", classes="primary"),
+            classes="horizontal"
         )
         yield Container(
-            Static("Real-Time Data:", classes="secondary"),
             TickerWidget(classes="ticker_widget"),
-            classes="vertical",
+            classes="vertical"
         )
-        yield Static("logged in as: user123", classes="secondary")
     
 
     def on_button_pressed(self, event: Button.Pressed):

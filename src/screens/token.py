@@ -17,4 +17,4 @@ class TokenScreen(Screen):
     def on_button_pressed(self, event: Button.Pressed):
         if event.button.id == "to_home":
             # 2. The key navigation command: pop the current screen
-            self.app.pop_screen()
+            self.app.push_screen("home")
