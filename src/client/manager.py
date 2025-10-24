@@ -80,7 +80,7 @@ class PriceManager:
             self.latest_prices[name] = await client.fetch_latest_prices()
         
         # This log is helpful for debugging
-        # self.log(f"Prices updated: {self.latest_prices}")
+        self.log(f"Prices updated: {self.latest_prices}")
 
     def get_price(self, exchange: str, symbol: str) -> float | None:
         """Lightweight getter for the TUI to use."""

@@ -1,6 +1,6 @@
 # src/app.py
 
-import pickle
+from pathlib import Path
 import ccxt.async_support as ccxt
 
 from datetime import datetime
@@ -8,14 +8,16 @@ from textual.app import App, ComposeResult
 from textual.reactive import reactive
 from textual.widgets import Header, Footer, Static, Button, Digits
 
-from clients.manager import PriceManager
+from client.manager import PriceManager
 
-from workers.markets import fetch_ohlcv, fetch_market, fetch_markets, ApiDataFetched
+from workers.markets import fetch_ohlcv, fetch_prices, ApiDataFetched
 
 from screens.home import HomeScreen
 from screens.settings import SettingsScreen
-from screens.token import TokenScreen
 
+PROJECT_ROOT = Path(__file__).parent.parent
+
+CONFIG_FILE_PATH = PROJECT_ROOT / 'config.toml'
 class RealTimeTUIApp(App):
     CSS = """
     Header {
@@ -64,16 +66,21 @@ class RealTimeTUIApp(App):
     SCREENS = {
         "home": HomeScreen,
         "settings": SettingsScreen,
-        "token": TokenScreen,
     }
     
     BINDINGS = [
         ("q", "quit", "quit"),
         ("s", "push_screen('settings')", "settings"), # Direct key navigation
-        ("t", "push_screen('token')", "token info"), # Direct key navigation
     ]
     
     def on_mount(self):
+        try:
+            self.price_manager = PriceManager(CONFIG_FILE_PATH)
+        except Exception as e:
+            self.log(f"Error initializing config file: {e}")
+            self.bell();
+            return
+        
         # Initialize exchange client
         try:
             self.exchange_client = ccxt.binanceus({
@@ -87,14 +94,18 @@ class RealTimeTUIApp(App):
             self.bell();
             return
         
-        # Start on the home screen
+       
         self.push_screen("home")
-        self.set_interval(5.0, self.start_data_fetch)
+        
+        self.set_interval(15.0, self.start_strategy_fetch)
+        self.set_interval(2.0, self.start_tickers_fetch)
+    
+    def start_tickers_fetch(self):
+        self.run_worker(fetch_prices(self), exclusive=True)
                 
-    def start_data_fetch(self):
-        """A placeholder method to start data fetching tasks."""
+    def start_strategy_fetch(self):
         self.run_worker(fetch_ohlcv(self), exclusive=True)
-
+        
     def on_api_data_fetched(self, message: ApiDataFetched):
             """Called when ApiDataFetched message is received from the worker."""
             

@@ -1,5 +1,5 @@
 .env
 .venv
 .gitignore
-config.json
+config.toml
 reminder.txt

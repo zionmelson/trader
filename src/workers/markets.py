@@ -20,9 +20,17 @@ class ApiDataFetched(Message):
         self.data = data
         super().__init__()
 
-class Prices(App):
-    """struct to normalize prices."""
+# prices
+async def fetch_prices(app: App):
+    if app.price_manager:
+        try:
+            await app.price_manager.update_all_prices()
+        except Exception as e:
+            app.log(f"Error in price worker: {e}")
 
+# orders
+
+# strategy
 async def fetch_ohlcv(app: App):
     """
     Fetches OHLCV data using the CCXT client attached to the main App.
@@ -115,39 +123,3 @@ async def fetch_ohlcv(app: App):
         app.post_message(ApiDataFetched(str(e)))
     finally:
         await app.exchange_client.close()
-
-async def fetch_market(app: App):
-    """
-    Fetches data using the CCXT client attached to the main App.
-    """
-    
-    if app.exchange_client is None:
-        app.log("Error: CCXT client not initialized.")
-        return
-    
-    try:
-        order_book = await app.exchange_client.fetch_order_book(app.symbols[0])
-        app.post_message(ApiDataFetched(order_book))
-    except Exception as e:
-        app.post_message(ApiDataFetched(str(e)))
-    finally:
-        await app.exchange_client.close()
-
-async def fetch_markets(app: App):
-    """
-    Fetches market data for all symbols using the CCXT client.
-    """
-    if app.exchange_client is None:
-        app.log("Error: CCXT client not initialized.")
-        return
-
-    try:
-        markets = await app.exchange_client.fetch_markets()
-        app.post_message(ApiDataFetched(markets))
-    except Exception as e:
-        app.post_message(ApiDataFetched(str(e)))
-    finally:
-        await app.exchange_client.close()
-   
-        
-        

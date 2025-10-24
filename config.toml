@@ -1,47 +1,11 @@
 # List of exchanges to activate
-active_exchanges = ["alpaca", "bitget", "bybit", "gate", "hyperliquid"]
+active_exchanges = ["alpaca"]
 
 [exchanges.alpaca]
 # CCXT-specific ID
 id = "alpaca"
 api_key = "PKUUVOXC7XFJCCM2DEAO3ITLVY"
 secret = "3qHA2pGPUDDSeeChm91SNiEUCuGwWWGQganZvR5zzUTD"
-private = ""
-# Symbols you care about for this exchange
-symbols = ["BTC/USD", "ETH/USD"]
-
-[exchanges.bitget]
-# CCXT-specific ID
-id = "bitget"
-api_key = ""
-secret = ""
-private = ""
-# Symbols you care about for this exchange
-symbols = ["BTC/USD", "ETH/USD"]
-
-[exchanges.bybit]
-# CCXT-specific ID
-id = "bybit"
-api_key = ""
-secret = ""
-private = ""
-# Symbols you care about for this exchange
-symbols = ["BTC/USD", "ETH/USD"]
-
-[exchanges.gate]
-# CCXT-specific ID
-id = "gate"
-api_key = ""
-secret = ""
-private = ""
-# Symbols you care about for this exchange
-symbols = ["BTC/USD", "ETH/USD"]
-
-[exchanges.hyperliquid]
-# CCXT-specific ID
-id = "hyperliquid"
-api_key = ""
-secret = ""
 private = ""
 # Symbols you care about for this exchange
 symbols = ["BTC/USD", "ETH/USD"]

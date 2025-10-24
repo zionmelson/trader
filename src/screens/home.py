@@ -8,25 +8,22 @@ from textual.screen import Screen
 from textual.widgets import Header, Footer, Static, Button
 
 class TickerWidget(Static):
-    current_data: dict = {}
     def on_mount(self) -> None:
         """
         Sets the widget's initial content by reading the current state 
         of the App's reactive variable.
         """  
         
-        self.watch(self.app, "market_data", self.watch_market_data)
+        self.watch(self.app, "strategy_data", self.watch_strategy_data)
         
-        if not self.app.market_data:
+        if not self.app.strategy_data:
             self.update("[i]Application starting up...[/i]")
             return
-
         
-    def watch_market_data(self, data: bytes) -> None:
+    def watch_strategy_data(self, data: bytes) -> None:
         """
-        Called when the TUI's primary market_data state changes.
+        Called when the TUI's primary strategy_data state changes.
         """
-        self.log('unpicing data')
         
         try:
             unpickled_data = pickle.loads(data)
@@ -36,10 +33,7 @@ class TickerWidget(Static):
                 self.update(f"[red]API Error: {unpickled_data}[/red]")
                 return
             
-            current_data = unpickled_data
-            self.log(f"TickerWidget: received update with data keys: {list(current_data.keys())}")
-            
-            self.log('unpicing data')
+            self.log(f"TickerWidget: received update with data keys: {list(unpickled_data.keys())}")
             
             if data == {}:
                 self.update("[i]Waiting for market data...[/i]")
@@ -49,9 +43,7 @@ class TickerWidget(Static):
             self.log(f"Error unpickling data: {e}")
             self.update("[red]Error: Corrupt data[/red]")
             return
-            
-        # 3. Handle if the unpickled data is an error string
-        
+                    
         df_5m = unpickled_data.get("5m")
         df_1h = unpickled_data.get("1h")
         df_1d = unpickled_data.get("1d")
@@ -80,7 +72,9 @@ class TickerWidget(Static):
         except Exception as e:
             self.log(f"Error processing DataFrame: {e}")
             self.update(f"[red]Error parsing data[/red]:", e)
-        
+   
+
+           
 class HomeScreen(Screen):
     """The main application view/page."""
     
