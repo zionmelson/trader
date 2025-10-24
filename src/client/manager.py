@@ -12,13 +12,21 @@ class ExchangeClient:
         self.exchange_id = config['id']
         self.symbols = config['symbols']
         
+        use_sandbox = config.get('paper_trade', False)
+        
         # Instantiate the CCXT client
         exchange_class = getattr(ccxt, self.exchange_id)
-        self.client = exchange_class({
+        
+        ccxt_config = {
             'apiKey': config.get('api_key'), # Use .get() for safety
             'secret': config.get('secret'),
             'enableRateLimit': True,
-        })
+        }
+        
+        if use_sandbox:
+            ccxt_config['sandbox'] = True
+            
+        self.client = exchange_class(ccxt_config)
 
     async def fetch_latest_prices(self) -> Dict[str, float]:
         """
@@ -28,12 +36,21 @@ class ExchangeClient:
         prices = {}
         try:
             tickers = await self.client.fetch_tickers(self.symbols)
-            for symbol, ticker_data in tickers.items():
-                if 'last' in ticker_data:
+            for symbol in self.symbols:
+                # 3. Look up the symbol in the (potentially unordered) tickers dict
+                ticker_data = tickers.get(symbol)
+                
+                # 4. Add to our new dict in the correct order
+                if ticker_data and 'last' in ticker_data:
                     prices[symbol] = ticker_data['last']
+                else:
+                    # Handle if exchange didn't return data for a symbol
+                    prices[symbol] = None
         except Exception as e:
             print(f"Error fetching prices for {self.exchange_id}: {e}")
         
+            for symbol in self.symbols:
+                prices[symbol] = None
         return prices
 
     async def place_order(self, symbol: str, side: str, amount: float, price: float = None):
@@ -79,9 +96,6 @@ class PriceManager:
         for name, client in self.clients.items():
             self.latest_prices[name] = await client.fetch_latest_prices()
         
-        # This log is helpful for debugging
-        self.log(f"Prices updated: {self.latest_prices}")
-
     def get_price(self, exchange: str, symbol: str) -> float | None:
         """Lightweight getter for the TUI to use."""
         return self.latest_prices.get(exchange, {}).get(symbol)

@@ -73,7 +73,46 @@ class TickerWidget(Static):
             self.log(f"Error processing DataFrame: {e}")
             self.update(f"[red]Error parsing data[/red]:", e)
    
+class LivePricesTable(Static):
+    """
+    This widget pulls *all* live ticker data from the PriceManager
+    and displays it in a formatted table.
+    """
+    def on_mount(self) -> None:
+        self.update("[i]Live Prices (2s): Loading...[/i]")
+        # Set this widget's custom latency (faster)
+        self.set_interval(2.0, self.refresh_prices) 
 
+    def refresh_prices(self) -> None:
+        price_manager = self.app.price_manager
+        
+        if not price_manager:
+            self.update("[red]Error: PriceManager not initialized![/red]")
+            return
+
+        # Pull the entire price dictionary
+        all_prices = price_manager.get_all_prices()
+        
+        if not all_prices:
+            self.update("[i]Live Prices (2s): No data received yet...[/i]")
+            return
+
+        # Build the rich display string
+        lines = ["[bold underline]Live Ticker Prices[/bold underline]\n"]
+        
+        for exchange_id, symbols_prices in all_prices.items():
+            lines.append(f"[bold]{exchange_id.upper()}[/bold]")
+            if not symbols_prices:
+                lines.append("  [dim]Waiting for data...[/dim]")
+                continue
+
+            for symbol, price in symbols_prices.items():
+                price_str = f"[green]${price:,.2f}[/green]" if price is not None else "[red]N/A[/red]"
+                lines.append(f"  {symbol}: {price_str}")
+            lines.append("") # Add a blank line between exchanges
+            
+        self.update("\n".join(lines))
+ 
            
 class HomeScreen(Screen):
     """The main application view/page."""
@@ -87,7 +126,14 @@ class HomeScreen(Screen):
             classes="horizontal"
         )
         yield Container(
-            TickerWidget(classes="secondary"),
+            # Widget for your strategy data
+            TickerWidget(classes="ticker_widget"), 
+            
+            Static("\n"), # Add some space
+            
+            # Widget for all live ticker prices
+            LivePricesTable(classes="live_prices_table"), 
+            
             classes="vertical"
         )
     
