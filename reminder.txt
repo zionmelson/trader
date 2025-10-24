@@ -1,0 +1,6 @@
+ATR ✅
+RSI ✅
+MACD
+ADX
+EMA
+Bollinger Bands
