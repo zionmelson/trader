@@ -8,12 +8,12 @@ from textual.app import App, ComposeResult
 from textual.reactive import reactive
 from textual.widgets import Header, Footer, Static, Button, Digits
 
-from client.manager import DexManager, DexchangeClient
+from .client.manager import DexManager, DexchangeClient
 
-from workers.markets import fetch_ohlcv, fetch_prices, ApiDataFetched
+from .workers.markets import fetch_ohlcv, fetch_prices, ApiDataFetched
 
-from screens.home import HomeScreen
-from screens.settings import SettingsScreen
+from .screens.home import HomeScreen
+from .screens.settings import SettingsScreen
 
 PROJECT_ROOT = Path(__file__).parent.parent
 
@@ -81,9 +81,28 @@ class RealTimeTUIApp(App):
             self.bell();
             return
         
+        self.show_error_screen(f"Failed to initialize: {e}")
+        
+        try:
+            if not self.dex_manager.clients:
+                self.log("No exchanges loaded from config.toml. Strategy worker will not run.")
+                self.bell()
+            else:
+                first_client_name = list(self.dex_manager.clients.keys())[0]
+                
+                self.dexchange_client = self.dex_manager.clients[first_client_name]
+                
+                self.symbols = self.dexchange_client.symbols
+                
+                self.log(f"Default strategy client set to: {first_client_name}")
+        except Exception as e:
+            self.log(f"Error setting default strategy client: {e}")
+            self.bell()
+            return
+        
         self.push_screen("home")
         
-        self.set_interval(15.0, self.start_strategy_fetch)
+        self.set_interval(60.0, self.start_strategy_fetch)
         self.set_interval(2.0, self.start_tickers_fetch)
     
     def start_tickers_fetch(self):

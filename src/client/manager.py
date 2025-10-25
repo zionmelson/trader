@@ -24,7 +24,7 @@ class DexchangeClient:
         """
         prices = {}
         try:
-            tickers = await self.client.fetch_tickers(self.symbols)
+            tickers = await self._client.fetch_tickers(self.symbols)
             for symbol in self.symbols:
                 # 3. Look up the symbol in the (potentially unordered) tickers dict
                 ticker_data = tickers.get(symbol)
@@ -36,28 +36,28 @@ class DexchangeClient:
                     # Handle if dexchange didn't return data for a symbol
                     prices[symbol] = None
                     
-                print(prices[symbol])
         except Exception as e:
-            print(f"Error fetching prices for {self.exchange_id}: {e}")
+            print(f"Error fetching prices for {self.id}: {e}")
         
             for symbol in self.symbols:
                 prices[symbol] = None
+                
         return prices
 
     async def place_order(self, symbol: str, side: str, amount: float, price: float = None):
         """Wrapper for placing an order."""
-        print(f"Placing {side} order for {amount} {symbol} on {self.exchange_id}")
+        print(f"Placing {side} order for {amount} {symbol} on {self.id}")
         try:
             order_type = 'limit' if price else 'market'
-            order = await self.client.create_order(symbol, order_type, side, amount, price)
+            order = await self._client.create_order(symbol, order_type, side, amount, price)
             return order
         except Exception as e:
-            print(f"Order failed on {self.exchange_id}: {e}")
+            print(f"Order failed on {self.id}: {e}")
             return None
 
     async def close(self):
         """Properly close the dexchange connection."""
-        await self.client.close()
+        await self._client.close()
 
 class DexManager:
     """
@@ -66,7 +66,8 @@ class DexManager:
     def __init__(self, config_path: str):
         with open(config_path, 'r') as f:
             self.config = toml.load(f)
-        
+        required_fields = ['id', 'api_key', 'secret', 'symbols']
+
         self.clients: Dict[str, DexchangeClient] = {}
         self.latest_prices: Dict[str, Dict[str, float]] = {}
 
@@ -76,7 +77,7 @@ class DexManager:
                 
                 # 1. Build the config for the raw ccxt client
                 exchange_class = getattr(ccxt, client_config['id'])
-                use_sandbox = client_config.get('paper_trade', False)
+                use_sandbox = client_config.get('sandbox', False)
                 
                 ccxt_config = {
                     'apiKey': client_config.get('api_key'),
@@ -85,6 +86,11 @@ class DexManager:
                 }
                 if use_sandbox:
                     ccxt_config['sandbox'] = True
+                
+                for field in required_fields:
+                    if field not in client_config:
+                        raise ValueError(f"Missing required field '{field}' for exchange {exchange_name}")
+
                 
                 # 2. Create the raw client instance
                 raw_client = exchange_class(ccxt_config)
@@ -104,6 +110,9 @@ class DexManager:
         """
         for name, client in self.clients.items():
             self.latest_prices[name] = await client.fetch_latest_prices()
+  
+    async def update_strategy_prices(self):
+        pass;
         
     def get_price(self, dexchange: str, symbol: str) -> float | None:
         """Lightweight getter for the TUI to use."""

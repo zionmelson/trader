@@ -24,6 +24,9 @@ class TickerWidget(Static):
         """
         Called when the TUI's primary strategy_data state changes.
         """
+        if not data:
+            self.update("[i]No data received[/i]")
+            return
         
         try:
             unpickled_data = pickle.loads(data)
@@ -84,14 +87,14 @@ class LivePricesTable(Static):
         self.set_interval(5.0, self.refresh_prices) 
 
     def refresh_prices(self) -> None:
-        price_manager = self.app.price_manager
+        dex_manager = self.app.dex_manager
         
-        if not price_manager:
+        if not dex_manager:
             self.update("[red]Error: PriceManager not initialized![/red]")
             return
 
         # Pull the entire price dictionary
-        all_prices = price_manager.get_all_prices()
+        all_prices = dex_manager.get_all_prices()
         
         if not all_prices:
             self.update("[i]Live Prices (5s): No data received yet...[/i]")

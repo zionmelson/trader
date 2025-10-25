@@ -22,9 +22,9 @@ class ApiDataFetched(Message):
 
 # prices
 async def fetch_prices(app: App):
-    if app.price_manager:
+    if app.dex_manager:
         try:
-            await app.price_manager.update_all_prices()
+            await app.dex_manager.update_all_prices()
         except Exception as e:
             app.log(f"Error in price worker: {e}")
 
@@ -32,21 +32,27 @@ async def fetch_prices(app: App):
 
 # strategy
 async def fetch_ohlcv(app: App):
+    if app.dex_manager:
+        try:
+            await app.dex_manager.update_strategy_prices()
+        except Exception as e:
+            app.log(f"Error in price worker: {e}")
+    
     """
     Fetches OHLCV data using the CCXT client attached to the main App.
     """
     
-    if app.exchange_client is None:
+    if app.dexchange_client is None:
         app.log("Error: CCXT client not initialized.")
         return
     
     try:
-        ohlcv = await app.exchange_client.fetch_ohlcv(app.symbols[0], '1d', limit=30)
+        ohlcv = await app.dexchange_client.fetch_ohlcv(app.symbols[0], '1d', limit=30)
         timeframes = {
-            "5m": await app.exchange_client.fetch_ohlcv(app.symbols[0], '5m', limit=(NORMAL_DURATION * 12)),
-            "1h": await app.exchange_client.fetch_ohlcv(app.symbols[0], '1h',  limit=(NORMAL_DURATION * 4)),
-            "1d": await app.exchange_client.fetch_ohlcv(app.symbols[0], '1d',  limit=(LONG_DURATION * 1)),
-     }
+            "5m": await app.dexchange_client.fetch_ohlcv(app.symbols[0], '5m', limit=(NORMAL_DURATION * 12)),
+            "1h": await app.dexchange_client.fetch_ohlcv(app.symbols[0], '1h',  limit=(NORMAL_DURATION * 4)),
+            "1d": await app.dexchange_client.fetch_ohlcv(app.symbols[0], '1d',  limit=(LONG_DURATION * 1)),
+        }
         
         dfs = {}
         for tf, ohlcv in timeframes.items():
@@ -119,7 +125,8 @@ async def fetch_ohlcv(app: App):
     
         pickled_dfs = pickle.dumps(dfs)
         app.post_message(ApiDataFetched(pickled_dfs))
+        return dfs
     except Exception as e:
         app.post_message(ApiDataFetched(str(e)))
     finally:
-        await app.exchange_client.close()
+        await app.dexchange_client.close()
