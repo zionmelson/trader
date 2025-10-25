@@ -14,6 +14,7 @@ from .workers.markets import fetch_ohlcv, fetch_prices, ApiDataFetched
 
 from .screens.home import HomeScreen
 from .screens.settings import SettingsScreen
+from .screens.error import ErrorScreen
 
 PROJECT_ROOT = Path(__file__).parent.parent
 
@@ -66,6 +67,7 @@ class RealTimeTUIApp(App):
     SCREENS = {
         "home": HomeScreen,
         "settings": SettingsScreen,
+        "error": ErrorScreen
     }
     
     BINDINGS = [
@@ -81,7 +83,7 @@ class RealTimeTUIApp(App):
             self.bell();
             return
         
-        self.show_error_screen(f"Failed to initialize: {e}")
+        self.show_error_screen()
         
         try:
             if not self.dex_manager.clients:
@@ -117,6 +119,9 @@ class RealTimeTUIApp(App):
             self.strategy_data = message.data 
 
             message.stop()
+
+    def show_error_screen(self):
+        self.push_screen("error");
 
 if __name__ == "__main__":
     app = RealTimeTUIApp()
