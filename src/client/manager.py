@@ -4,29 +4,18 @@ import ccxt.async_support as ccxt
 import toml
 from typing import Dict, Any, List
 
-class ExchangeClient:
+class DexchangeClient:
     """
-    Manages all API interaction for a single exchange.
+    Manages all API interaction for a single dexchange.
     """
-    def __init__(self, config: Dict[str, Any]):
-        self.exchange_id = config['id']
-        self.symbols = config['symbols']
-        
-        use_sandbox = config.get('paper_trade', False)
-        
-        # Instantiate the CCXT client
-        exchange_class = getattr(ccxt, self.exchange_id)
-        
-        ccxt_config = {
-            'apiKey': config.get('api_key'), # Use .get() for safety
-            'secret': config.get('secret'),
-            'enableRateLimit': True,
-        }
-        
-        if use_sandbox:
-            ccxt_config['sandbox'] = True
-            
-        self.client = exchange_class(ccxt_config)
+    def __init__(self, ccxt_client_instance: ccxt.Exchange, symbols_list: List[str]):
+       self._client = ccxt_client_instance
+       self.symbols = symbols_list
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._client, name)
+    
+    # --- You can now add your own custom methods here ---
 
     async def fetch_latest_prices(self) -> Dict[str, float]:
         """
@@ -44,7 +33,7 @@ class ExchangeClient:
                 if ticker_data and 'last' in ticker_data:
                     prices[symbol] = ticker_data['last']
                 else:
-                    # Handle if exchange didn't return data for a symbol
+                    # Handle if dexchange didn't return data for a symbol
                     prices[symbol] = None
                     
                 print(prices[symbol])
@@ -67,10 +56,10 @@ class ExchangeClient:
             return None
 
     async def close(self):
-        """Properly close the exchange connection."""
+        """Properly close the dexchange connection."""
         await self.client.close()
 
-class PriceManager:
+class DexManager:
     """
     Orchestrates all ExchangeClients and aggregates their data.
     """
@@ -78,13 +67,32 @@ class PriceManager:
         with open(config_path, 'r') as f:
             self.config = toml.load(f)
         
-        self.clients: Dict[str, ExchangeClient] = {}
+        self.clients: Dict[str, DexchangeClient] = {}
         self.latest_prices: Dict[str, Dict[str, float]] = {}
 
         for exchange_name in self.config['active_exchanges']:
             if exchange_name in self.config['exchanges']:
                 client_config = self.config['exchanges'][exchange_name]
-                self.clients[exchange_name] = ExchangeClient(client_config)
+                
+                # 1. Build the config for the raw ccxt client
+                exchange_class = getattr(ccxt, client_config['id'])
+                use_sandbox = client_config.get('paper_trade', False)
+                
+                ccxt_config = {
+                    'apiKey': client_config.get('api_key'),
+                    'secret': client_config.get('secret'),
+                    'enableRateLimit': True,
+                }
+                if use_sandbox:
+                    ccxt_config['sandbox'] = True
+                
+                # 2. Create the raw client instance
+                raw_client = exchange_class(ccxt_config)
+                
+                # 3. Create your wrapper, passing the raw client to it
+                symbols_list = client_config['symbols']
+                self.clients[exchange_name] = DexchangeClient(raw_client, symbols_list)
+                
                 self.latest_prices[exchange_name] = {}
             else:
                 print(f"Warning: Config for '{exchange_name}' not found.")
@@ -97,21 +105,21 @@ class PriceManager:
         for name, client in self.clients.items():
             self.latest_prices[name] = await client.fetch_latest_prices()
         
-    def get_price(self, exchange: str, symbol: str) -> float | None:
+    def get_price(self, dexchange: str, symbol: str) -> float | None:
         """Lightweight getter for the TUI to use."""
-        return self.latest_prices.get(exchange, {}).get(symbol)
+        return self.latest_prices.get(dexchange, {}).get(symbol)
 
     def get_all_prices(self) -> Dict[str, Dict[str, float]]:
         """Gets the entire aggregated price data structure."""
         return self.latest_prices
 
-    async def place_order(self, exchange: str, symbol: str, side: str, amount: float):
+    async def place_order(self, dexchange: str, symbol: str, side: str, amount: float):
         """Delegates placing an order to the correct client."""
-        if exchange not in self.clients:
-            print(f"Error: No client for exchange '{exchange}'.")
+        if dexchange not in self.clients:
+            print(f"Error: No client for dexchange '{dexchange}'.")
             return None
         
-        return await self.clients[exchange].place_order(symbol, side, amount)
+        return await self.clients[dexchange].place_order(symbol, side, amount)
 
     async def close_all(self):
         """Closes all client connections."""

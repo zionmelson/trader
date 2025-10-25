@@ -8,7 +8,7 @@ from textual.app import App, ComposeResult
 from textual.reactive import reactive
 from textual.widgets import Header, Footer, Static, Button, Digits
 
-from client.manager import PriceManager
+from client.manager import DexManager, DexchangeClient
 
 from workers.markets import fetch_ohlcv, fetch_prices, ApiDataFetched
 
@@ -56,11 +56,11 @@ class RealTimeTUIApp(App):
     }
     """
     
-    price_manager: PriceManager | None = None
+    dex_manager: DexManager | None = None
     
     strategy_data = reactive(b"")  # Global reactive state for market data
     
-    exchange_client: ccxt.Exchange | None = None
+    dexchange_client: DexchangeClient | None = None
     symbols: list[str] = []
 
     SCREENS = {
@@ -75,26 +75,12 @@ class RealTimeTUIApp(App):
     
     def on_mount(self):
         try:
-            self.price_manager = PriceManager(CONFIG_FILE_PATH)
+            self.dex_manager = DexManager(CONFIG_FILE_PATH)
         except Exception as e:
             self.log(f"Error initializing config file: {e}")
             self.bell();
             return
         
-        # Initialize exchange client
-        try:
-            self.exchange_client = ccxt.binanceus({
-                'enableRateLimit': True,
-            })
-            self.symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'DOGE/USD']
-
-            self.log("Exchange client initialized.")
-        except Exception as e:
-            self.log(f"Error initializing exchange client: {e}")
-            self.bell();
-            return
-        
-       
         self.push_screen("home")
         
         self.set_interval(15.0, self.start_strategy_fetch)
