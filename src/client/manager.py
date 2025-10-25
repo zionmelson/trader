@@ -46,6 +46,8 @@ class ExchangeClient:
                 else:
                     # Handle if exchange didn't return data for a symbol
                     prices[symbol] = None
+                    
+                print(prices[symbol])
         except Exception as e:
             print(f"Error fetching prices for {self.exchange_id}: {e}")
         
@@ -67,7 +69,6 @@ class ExchangeClient:
     async def close(self):
         """Properly close the exchange connection."""
         await self.client.close()
-
 
 class PriceManager:
     """

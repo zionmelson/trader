@@ -1,0 +1,18 @@
+{'id': 'alpaca', 'name': 'Alpaca', 'countries': ['US']}
+{'id': 'binanceus', 'name': 'Binance US', 'countries': ['US']}
+{'id': 'bingx', 'name': 'BingX', 'countries': ['US']}
+{'id': 'bitmart', 'name': 'BitMart', 'countries': ['US', 'CN', 'HK', 'KR']}
+{'id': 'blofin', 'name': 'BloFin', 'countries': ['US']}
+{'id': 'btcalpha', 'name': 'BTC-Alpha', 'countries': ['US']}
+{'id': 'coinbase', 'name': 'Coinbase Advanced', 'countries': ['US']}
+{'id': 'coinbaseadvanced', 'name': 'Coinbase Advanced', 'countries': ['US']}
+{'id': 'coinbaseexchange', 'name': 'Coinbase Exchange', 'countries': ['US']}
+{'id': 'coinbaseinternational', 'name': 'Coinbase International', 'countries': ['US']}
+{'id': 'gemini', 'name': 'Gemini', 'countries': ['US']}
+{'id': 'hibachi', 'name': 'Hibachi', 'countries': ['US']}
+{'id': 'kraken', 'name': 'Kraken', 'countries': ['US']}
+{'id': 'krakenfutures', 'name': 'Kraken Futures', 'countries': ['US']}
+{'id': 'myokx', 'name': 'MyOKX(EEA)', 'countries': ['CN', 'US']}
+{'id': 'okx', 'name': 'OKX', 'countries': ['CN', 'US']}
+{'id': 'okxus', 'name': 'OKX(US)', 'countries': ['CN', 'US']}
+{'id': 'poloniex', 'name': 'Poloniex', 'countries': ['US']}

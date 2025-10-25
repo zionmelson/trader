@@ -79,9 +79,9 @@ class LivePricesTable(Static):
     and displays it in a formatted table.
     """
     def on_mount(self) -> None:
-        self.update("[i]Live Prices (2s): Loading...[/i]")
+        self.update("[i]Live Prices (5s): Loading...[/i]")
         # Set this widget's custom latency (faster)
-        self.set_interval(2.0, self.refresh_prices) 
+        self.set_interval(5.0, self.refresh_prices) 
 
     def refresh_prices(self) -> None:
         price_manager = self.app.price_manager
@@ -94,7 +94,7 @@ class LivePricesTable(Static):
         all_prices = price_manager.get_all_prices()
         
         if not all_prices:
-            self.update("[i]Live Prices (2s): No data received yet...[/i]")
+            self.update("[i]Live Prices (5s): No data received yet...[/i]")
             return
 
         # Build the rich display string
