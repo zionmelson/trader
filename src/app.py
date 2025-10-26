@@ -80,15 +80,16 @@ class RealTimeTUIApp(App):
             self.dex_manager = DexManager(CONFIG_FILE_PATH)
         except Exception as e:
             self.log(f"Error initializing config file: {e}")
-            self.bell();
+            self.bell()
+            self.show_error_screen()
             return
         
-        self.show_error_screen()
         
         try:
             if not self.dex_manager.clients:
                 self.log("No exchanges loaded from config.toml. Strategy worker will not run.")
                 self.bell()
+                self.show_error_screen()
             else:
                 first_client_name = list(self.dex_manager.clients.keys())[0]
                 
@@ -100,6 +101,7 @@ class RealTimeTUIApp(App):
         except Exception as e:
             self.log(f"Error setting default strategy client: {e}")
             self.bell()
+            self.show_error_screen()
             return
         
         self.push_screen("home")

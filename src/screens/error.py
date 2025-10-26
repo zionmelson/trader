@@ -1,4 +1,4 @@
-# src/screens/settings.py
+# src/screens/error.py
 
 from textual.app import App, ComposeResult
 from textual.screen import Screen

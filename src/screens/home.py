@@ -2,10 +2,10 @@
 
 import pickle
 import time
-from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal
+from textual.app import ComposeResult
+from textual.containers import Container
 from textual.screen import Screen
-from textual.widgets import Header, Footer, Static, Button
+from textual.widgets import Header, Footer, Static
 
 class TickerWidget(Static):
     def on_mount(self) -> None:
@@ -140,8 +140,3 @@ class HomeScreen(Screen):
             classes="vertical"
         )
     
-
-    def on_button_pressed(self, event: Button.Pressed):
-        if event.button.id == "to_settings":
-            # 1. The key navigation command: push the next screen
-            self.app.push_screen("settings")
