@@ -37,10 +37,7 @@ async def fetch_ohlcv(app: App):
             await app.dex_manager.update_strategy_prices()
         except Exception as e:
             app.log(f"Error in price worker: {e}")
-    
-    """
-    Fetches OHLCV data using the CCXT client attached to the main App.
-    """
+    """Fetches OHLCV data using the CCXT client attached to the main App."""
     
     if app.dexchange_client is None:
         app.log("Error: CCXT client not initialized.")
@@ -128,5 +125,3 @@ async def fetch_ohlcv(app: App):
         return dfs
     except Exception as e:
         app.post_message(ApiDataFetched(str(e)))
-    finally:
-        await app.dexchange_client.close()

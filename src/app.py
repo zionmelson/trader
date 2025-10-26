@@ -145,9 +145,7 @@ class RealTimeTUIApp(App):
         
     def on_api_data_fetched(self, message: ApiDataFetched):
             """Called when ApiDataFetched message is received from the worker."""
-            
             self.strategy_data = message.data 
-
             message.stop()
 
     def show_error_screen(self):
