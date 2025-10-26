@@ -16,3 +16,4 @@ ccxt
 asyncio
 ta-lib
 toml
+base58

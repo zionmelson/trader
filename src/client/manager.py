@@ -4,10 +4,21 @@ import ccxt.async_support as ccxt
 import toml
 import asyncio
 import os
+import base58                
+from solders.keypair import Keypair
+
 
 from typing import Dict, Any, List
 
-from .solana import SolanaAMMClient
+
+from .solana import SolanaClient
+
+TOKEN_PAIRS = {
+            "SOL/USDC": ("So11111111111111111111111111111111111111112", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+            "RAY/SOL": ("4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", "So11111111111111111111111111111111111111112"),}
+AMM_ADDRESSES = {
+            "SOL/USDC": "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2",
+            "RAY/SOL": "AVs9TA4nWDzfPJE9gGVNJMVhcQy3V9PGazuz33BfG2RA",}   
 
 class DexchangeClient:
     """
@@ -19,38 +30,40 @@ class DexchangeClient:
        self.config = client_config 
        self.symbols = client_config.get('symbols', [])
        self.is_dex = client_config.get('is_dex', False)
-       self.exchange_id = client_config.get('id', 'unknown_exchange')
+       self.id = client_config.get('id', 'unknown_exchange')
        
        self.solana_client = None
+       
        if self.is_dex and client_config.get('rpc_url'):
             self._initialize_solana_client(client_config)
-
+   
     def __getattr__(self, name: str) -> Any:
-        if self.is_dex and not hasattr(self._client, name):
-             # Or handle specific known ccxt methods differently if needed
-             # print(f"Warning: Method '{name}' not applicable for DEX {self.id}")
-            pass
-    
         try:
             return getattr(self._client, name)
         except AttributeError:
-             raise AttributeError(f"'{self.__class__.__name__}' object (wrapping {self.id}) has no attribute '{name}'")
-
+            raise AttributeError(f"'{self.__class__.__name__}' object (wrapping {self.id}) has no attribute '{name}'")
+   
     def _initialize_solana_client(self, config: Dict[str, Any]):
         """Initialize Solana client for DEX operations"""
         try:
             
-            private_key = os.getenv(config.get('wallet_private_key_env', ''))
-            if not private_key:
-                print(f"Warning: No private key found for DEX {self.exchange_id}")
-                return
+            private_key = self.config.get('wallet_private_key', '')
+            
+            if not private_key or private_key == "3SbpjTnpowgFhvgZwpTeqKK86DdbJRdvQTYk5LBtZxjY":
+                print(f"Warning: No private key found for DEX {self.id}")
+                test_wallet = Keypair()
+                private_key = base58.b58encode(bytes(test_wallet)).decode('utf-8')
                 
-            self.solana_client = SolanaAMMClient(
+                print(f"📝 Generated test wallet: {test_wallet.pubkey()}")
+                
+            self.solana_client = SolanaClient(
                 rpc_url=config['rpc_url'],
                 wallet_private_key=private_key,
                 program_id=config.get('program_id', 'Gz1uGFbdpM9Bn255ydYmCRgM1JZNiEYFC68pVi3Bhwfg')
             )
             
+            print(f"✅ Solana client initialized for {self.id}")
+
         except ImportError:
             print("Solana dependencies not available")
         except Exception as e:
@@ -59,20 +72,14 @@ class DexchangeClient:
     def _parse_symbol(self, symbol: str) -> tuple[str, str]:
         """Parse trading symbol into token addresses"""
         # Map symbols to actual Solana token addresses
-        token_map = {
-            "SOL/USDC": ("So11111111111111111111111111111111111111112", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-            "RAY/SOL": ("4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", "So11111111111111111111111111111111111111112"),
-        }
+        token_map = TOKEN_PAIRS
         base, quote = symbol.split('/')
         return token_map.get(symbol, (base, quote))
     
     def _get_amm_address(self, symbol: str) -> str:
         """Get AMM pool address for symbol"""
         # This would map to actual Raydium pool addresses
-        amm_map = {
-            "SOL/USDC": "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2",
-            "RAY/SOL": "AVs9TA4nWDzfPJE9gGVNJMVhcQy3V9PGazuz33BfG2RA",
-        }
+        amm_map = AMM_ADDRESSES
         return amm_map.get(symbol, "")
 
     async def create_order(self, symbol: str, side: str, amount: float, price: float = None):
@@ -137,7 +144,7 @@ class DexchangeClient:
         """
         prices = {}
        
-        if self.is_dex and self.solana_client:
+        if self.is_dex:
             try:
                 if not hasattr(self, '_solana_initialized'):
                     await self.solana_client.initialize()
@@ -157,7 +164,7 @@ class DexchangeClient:
                         prices[symbol] = None
                         
             except Exception as e:
-                print(f"Error fetching DEX prices from Solana: {e}")
+                print(f"Error fetching {self.id} DEX prices from SOL: {e}")
                 for symbol in self.symbols:
                     prices[symbol] = None
         else:
@@ -185,23 +192,23 @@ class DexchangeClient:
 
     async def close(self):
         """ Overrides close method. Uses self.is_dex. """
-        print(f"Attempting to close connection for {self.exchange_id}...")
+        print(f"Attempting to close connection for {self.id}...")
         if self.is_dex:
             # --- CUSTOM DEX CLOSE LOGIC ---
-            print(f"Executing custom DEX close logic for {self.exchange_id} (if any)...")
+            print(f"Executing custom DEX close logic for {self.id} (if any)...")
             await asyncio.sleep(0.01) # Simulate
-            print(f"DEX {self.exchange_id} cleanup complete.")
+            print(f"DEX {self.id} cleanup complete.")
             # --- END CUSTOM DEX CLOSE LOGIC ---
         else:
             # --- Standard CCXT Logic ---
             if not self._client:
-                 # print(f"Warning: No ccxt client to close for {self.exchange_id}") # Optional warning
+                 # print(f"Warning: No ccxt client to close for {self.id}") # Optional warning
                  return
             try:
                 await self._client.close()
-                print(f"Closed ccxt client for {self.exchange_id}.")
+                print(f"Closed ccxt client for {self.id}.")
             except Exception as e:
-                 print(f"Error closing ccxt client for {self.exchange_id}: {e}") # Use stored ID
+                 print(f"Error closing ccxt client for {self.id}: {e}") # Use stored ID
 
 
 class DexManager:
@@ -211,7 +218,6 @@ class DexManager:
     def __init__(self, config_path: str):
         with open(config_path, 'r') as f:
             self.config = toml.load(f)
-        required_fields = ['id', 'api_key', 'secret', 'symbols']
 
         self.clients: Dict[str, DexchangeClient] = {}
         self.latest_prices: Dict[str, Dict[str, float]] = {}

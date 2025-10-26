@@ -84,7 +84,7 @@ class LivePricesTable(Static):
     def on_mount(self) -> None:
         self.update("[i]Live Prices (5s): Loading...[/i]")
         # Set this widget's custom latency (faster)
-        self.set_interval(5.0, self.refresh_prices) 
+        self.set_interval(2.5, self.refresh_prices) 
 
     def refresh_prices(self) -> None:
         dex_manager = self.app.dex_manager

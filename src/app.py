@@ -56,12 +56,10 @@ class RealTimeTUIApp(App):
         padding: 1;
     }
     """
-    
-    dex_manager: DexManager | None = None
-    
-    strategy_data = reactive(b"")  # Global reactive state for market data
-    
+  
     dexchange_client: DexchangeClient | None = None
+    dex_manager: DexManager | None = None
+    strategy_data = reactive(b"")  # Global reactive state for market data
     symbols: list[str] = []
 
     SCREENS = {
@@ -75,11 +73,14 @@ class RealTimeTUIApp(App):
         ("s", "push_screen('settings')", "settings"), # Direct key navigation
     ]
     
-    def on_mount(self):
+    async def on_mount(self):
         try:
             self.dex_manager = DexManager(CONFIG_FILE_PATH)
+            
+            # await self._initialize_clients()
+            
         except Exception as e:
-            self.log(f"Error initializing config file: {e}")
+            self.log(f"Error on mount: {e}")
             self.bell()
             self.show_error_screen()
             return
@@ -108,7 +109,34 @@ class RealTimeTUIApp(App):
         
         self.set_interval(60.0, self.start_strategy_fetch)
         self.set_interval(2.0, self.start_tickers_fetch)
-    
+   
+    async def _initialize_clients(self):
+        """Initialize all exchange clients asynchronously"""
+        if not self.dex_manager or not self.dex_manager.clients:
+            self.log("❌ No exchanges loaded from config")
+            self.bell()
+            self.push_screen("error")
+            return
+        
+        # Initialize each client
+        for client_name, client in self.dex_manager.clients.items():
+            if hasattr(client, 'initialize') and callable(client.initialize):
+                await client.initialize()
+                self.log(f"✅ Initialized {client_name}")
+        
+        # Set default strategy client
+        first_client_name = list(self.dex_manager.clients.keys())[0]
+        self.dexchange_client = self.dex_manager.clients[first_client_name]
+        self.symbols = self.dexchange_client.symbols
+        
+        self.log(f"📊 Default strategy client: {first_client_name}")
+        
+        # Test blockchain connection for DEX clients
+        for client_name, client in self.dex_manager.clients.items():
+            if client.is_dex and client.solana_client:
+                balance = await client.solana_client.get_balance()
+                self.log(f"💰 {client_name} wallet balance: {balance:.4f} SOL")
+     
     def start_tickers_fetch(self):
         self.run_worker(fetch_prices(self), exclusive=True)
                 

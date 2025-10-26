@@ -1,0 +1,1 @@
+python3 -c "import json, base58; k=json.load(open('$HOME/.config/solana/id.json')); print('Public:', base58.b58encode(bytes(k[32:])).decode()); print('Private:', base58.b58encode(bytes(k[:32])).decode())"
