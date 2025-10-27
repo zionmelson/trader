@@ -13,12 +13,26 @@ from typing import Dict, Any, List
 
 from .solana import SolanaClient
 
-TOKEN_PAIRS = {
+MAINNET_TOKEN_PAIRS = {
             "SOL/USDC": ("So11111111111111111111111111111111111111112", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-            "RAY/SOL": ("4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", "So11111111111111111111111111111111111111112"),}
-AMM_ADDRESSES = {
+            "RAY/SOL": ("4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", "So11111111111111111111111111111111111111112"),
+        }
+
+MAINNET_PAIR_ADDRESSES = {
             "SOL/USDC": "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2",
-            "RAY/SOL": "AVs9TA4nWDzfPJE9gGVNJMVhcQy3V9PGazuz33BfG2RA",}   
+            "RAY/SOL": "AVs9TA4nWDzfPJE9gGVNJMVhcQy3V9PGazuz33BfG2RA",
+        }   
+
+DEV_TOKEN_PAIRS = {
+            "SOL/USDC": ("So11111111111111111111111111111111111111112", "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
+            "RAY/SOL": ("4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", "So11111111111111111111111111111111111111112"),
+        }
+
+DEV_PAIR_ADDRESSES = {
+            "SOL/USDC": "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2",
+            "RAY/SOL": "AVs9TA4nWDzfPJE9gGVNJMVhcQy3V9PGazuz33BfG2RA",
+        }   
+
 
 class DexchangeClient:
     """
@@ -79,7 +93,7 @@ class DexchangeClient:
     def _get_amm_address(self, symbol: str) -> str:
         """Get AMM pool address for symbol"""
         # This would map to actual Raydium pool addresses
-        amm_map = AMM_ADDRESSES
+        amm_map = MAINNET_PAIR_ADDRESSES
         return amm_map.get(symbol, "")
 
     async def create_order(self, symbol: str, side: str, amount: float, price: float = None):
